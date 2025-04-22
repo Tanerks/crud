@@ -2,21 +2,32 @@
 require_once("includes/connect.php");
 
 $titulo = null;
-$laman = null;
-if (isset($_GET['editid'])) {
+$author = null;
+$dateposted = null;
+$story = null;
+if (isset($_GET['editnewsid'])) {
     try {
-        $selId = $_GET['editid'];
-        $selSQL = " SELECT id,atitle,acontent FROM tblabout WHERE md5(Id)=?";
+        $selId = $_GET['editnewsid'];
+        $selSQL = "SELECT id, title, author, dateposted, story FROM news WHERE md5(id)=?";
         $selData = array($selId);
         $stmtSel = $con->prepare($selSQL);
         $stmtSel->execute($selData);
         $rowSel = $stmtSel->fetch();
-        $titulo = $rowSel[1];
-        $laman = $rowSel[2];
+
+        if ($rowSel) {
+            $actualid = $rowSel[0];
+            $titulo = $rowSel[1];
+            $author = $rowSel[2];
+            $dateposted = $rowSel[3];
+            $story = $rowSel[4];
+        } else {
+            echo "<div style='color: red;'>No record found with the provided ID.</div>";
+        }
     } catch (PDOException $th) {
-        echo $th->getMessage();
+        echo "<div style='color: red;'>" . $th->getMessage() . "</div>";
     }
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -78,13 +89,17 @@ if (isset($_GET['editid'])) {
                                             <tr>
                                                 <th>ID</th>
                                                 <th>Title</th>
-                                                <th>Content</th>
+                                                <th>Author</th>
+                                                <th>DatePosted</th>
+                                                <th>Story</th>
+                                                <th>Picture</th>
                                                 <th>Action</th>
+
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <?php
-                                            $sql = "SELECT id,atitle,acontent,md5(id) FROM tblabout";
+                                            $sql = "SELECT id,title,author,dateposted,story,md5(id),picture FROM news";
                                             $stmt = $con->prepare($sql);
                                             $stmt->execute();
                                             $strtable = "";
@@ -92,10 +107,13 @@ if (isset($_GET['editid'])) {
                                                 $strtable .=     "<tr>";
                                                 $strtable .= "<td>{$row[0]}</td>";
                                                 $strtable .= "<td>{$row[1]}</td>";
-                                                $strtable .= "<td>" . substr(nl2br($row[2]), 0, 500) . "...</td>";
+                                                $strtable .= "<td>{$row[2]}</td>";
+                                                $strtable .= "<td>{$row[3]}</td>";
+                                                $strtable .= "<td>" . substr(nl2br($row[4]), 0, 500) . "...</td>";
+                                                $strtable .= "<td>{$row[6]}</td>";
                                                 $strtable .= "<td>
-                                <a href='aboutus.php?editid={$row[3]}' class='btn btn-success'>Edit</a>
-                                <a href='process_about.php?delid={$row[3]}' class='btn btn-warning'>Delete</a>
+                                <a href='news.php?editnewsid={$row[5]}' class='btn btn-success'>Edit</a>
+                                <a href='process_about.php?delnewsid={$row[5]}' class='btn btn-warning'>Delete</a>
                               </td>";
                                                 $strtable .= "</tr>";
                                             }
@@ -106,25 +124,38 @@ if (isset($_GET['editid'])) {
                                 </div>
                             </div>
 
-                            <div class="tab-pane " id="profile" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
-                                <form action="process_about.php" method="POST">
+                            <div class="tab-pane" id="profile" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
+                                <form action="process_about.php" method="POST" enctype="multipart/form-data">
 
-                                    <input type="hidden" name="editid" value="<?= $selId ?? '0' ?>">
+                                    <input type="hidden" name="editnewsid" value="<?= isset($selId) ? $selId : '0' ?>">
 
-                                    <div class="mb-3">
-                                        <label for="txtTitle" class="form-label">Title</label>
-                                        <input type="text" class="form-control" name="txtTitle" required value="<?= $titulo ?>">
+                                    <div class="mb-3" style="margin-bottom: 0.75rem; width:300px;">
+                                        <label for="txtTitle" class="form-label" style="margin-bottom: 0.1rem; font-size: 0.85rem;">Title</label>
+                                        <input type="text" class="form-control" name="txtTitle" required value="<?= $titulo ?>" style="padding-top: 0.3rem; padding-bottom: 0.3rem; font-size: 0.85rem;">
                                     </div>
 
-                                    <div class="mb-3">
-                                        <label for="txtContent" class="form-label">Text Area</label>
-                                        <textarea class="form-control" name="txtContent" rows="3" required><?= $laman ?></textarea>
+                                    <div class="mb-3" style="margin-bottom: 0.75rem;">
+                                        <label for="txtAuthor" class="form-label" style="margin-bottom: 0.1rem; font-size: 0.85rem;">Author</label>
+                                        <input type="text" class="form-control" name="txtAuthor" required value="<?= $author ?>" style="padding-top: 0.3rem; padding-bottom: 0.3rem; font-size: 0.85rem;">
                                     </div>
 
-                                    <button type="submit" class="btn btn-primary">Submit</button>
+                                    <div class="mb-3" style="margin-bottom: 0.75rem;">
+                                        <label for="txtDateposted" class="form-label" style="margin-bottom: 0.1rem; font-size: 0.85rem;">DatePosted</label>
+                                        <input type="date" class="form-control" name="txtDateposted" required value="<?= $dateposted ?>" style="padding-top: 0.3rem; padding-bottom: 0.3rem; font-size: 0.85rem;">
+                                    </div>
+
+                                    <div class="mb-3" style="margin-bottom: 0.75rem;">
+                                        <label for="txtStory" class="form-label" style="margin-bottom: 0.1rem; font-size: 0.85rem;">Story</label>
+                                        <input type="text" class="form-control" name="txtStory" required value="<?= $story ?>" style="padding-top: 0.3rem; padding-bottom: 0.3rem; font-size: 0.85rem;">
+                                    </div>
+
+                                    <div class="mb-3" style="margin-bottom: 0.75rem;">
+                                        <label for="txtContent" class="form-label" style="margin-bottom: 0.1rem; font-size: 0.85rem;">Upload Image</label>
+                                        <input type="file" class="form-control" name="picture" style="font-size: 0.85rem; padding-top: 0.2rem; padding-bottom: 0.2rem;">
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Submit</button>
                                 </form>
-
-
                             </div>
                         </div>
 

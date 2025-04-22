@@ -1,7 +1,7 @@
 <?php
 
 $host = "localhost";
-$dbase = "sample";
+$dbase = "dbtan";
 $uname = "root";
 $pw = '';
 $dsn = "mysql:host={$host};dbname={$dbase}";
